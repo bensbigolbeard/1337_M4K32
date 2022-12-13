@@ -34,6 +34,7 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
       throw new Error("boom. no image.");
     }
     const imageStream = await convert(base64ToBuffer(image_data), {
+      puppeteer: { args: ["--no-sandbox"] },
       width: 250,
       height: 250,
     });
