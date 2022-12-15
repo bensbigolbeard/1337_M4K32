@@ -1,19 +1,46 @@
-import { COLLECTION_TOKEN_COUNT } from "./constants";
 import isoFetch from "isomorphic-fetch";
+import {
+  ChatInputCommandInteraction,
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
+import { COLLECTION_TOKEN_COUNT } from "./constants";
 
-export const safeFetch = async (url: string) => {
+/* Internal Custom Command API */
+
+export type CustomCommand = {
+  name: string;
+  handler: (interaction: ChatInputCommandInteraction) => void;
+  command: RESTPostAPIChatInputApplicationCommandsJSONBody;
+};
+
+/* Asset Fetching Utils */
+
+type AssetResponse = Record<"image_url", string>;
+export const fetchImageUrl = async (url: string) => {
+  const res = await isoFetch(url);
+  const asset = await res.json();
+  return (asset as unknown as AssetResponse).image_url;
+};
+
+const fetchAssetImage = async (url: string) => {
+  const res = await isoFetch(url);
+  return Buffer.from(await res.arrayBuffer());
+};
+
+export const fetchAssetImageBuffer = async (
+  url: string
+): Promise<Buffer | null> => {
   try {
-    const headers = new global.Headers({ Accept: "application/json" });
-    const res = await isoFetch(url, { headers });
-    return res.json();
+    const imageUrl = await fetchImageUrl(url);
+    const imageSteam = await fetchAssetImage(imageUrl);
+    return imageSteam;
   } catch (e) {
     console.log("fetchError:", e);
-    return {};
+    return null;
   }
 };
 
-export const base64ToBuffer = (value = "") =>
-  value ? Buffer.from(value.split("base64,")[1], "base64") : Buffer.from("{}");
+/* General Utils */
 
 export const getRandomTokenId = () =>
   Math.floor(Math.random() * COLLECTION_TOKEN_COUNT) || 1;

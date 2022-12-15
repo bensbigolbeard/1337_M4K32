@@ -1,49 +1,46 @@
-import { base64ToBuffer, getRandomTokenId, safeFetch } from "../utils";
-import { convert } from "convert-svg-to-png";
+import svgToPng from "convert-svg-to-png";
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
-  CommandInteractionOption,
-  ApplicationCommandOptionType,
+  SlashCommandBuilder,
 } from "discord.js";
-import { COLLECTION_URL } from "../constants";
+import {
+  CustomCommand,
+  fetchAssetImageBuffer,
+  getRandomTokenId,
+} from "../utils";
+import { COLLECTION_TOKEN_COUNT, COLLECTION_URL } from "../constants";
 
-const COMMAND_NAME = "1337m3";
+const COMMAND_NAME = "1337_m3";
 const INPUT_NAME = "70k3n_1d";
-const ERROR_MSG_COLOR = 8000001; // no effing clue... it's red-ish tho
-
-const getFileName = (tokenId: number) => `5ku11_${tokenId}.png`;
-const validateInput = ({ name, value = -1 }: CommandInteractionOption) => {
-  return name === INPUT_NAME && value >= 0;
+const ERROR_MSG_COLOR = 0x880808; // red
+const PNG_CONFIG = {
+  puppeteer: { args: ["--no-sandbox"] },
+  width: 125,
+  height: 125,
 };
 
+const getFileName = (tokenId: number) => `5ku11_${tokenId}.png`;
+const getAssetUrl = (tokenId: number) => `${COLLECTION_URL}/${tokenId}`;
+
 const getById = async (interaction: ChatInputCommandInteraction) => {
-  const opts = interaction.options.data;
-  const tokenId = (opts.find(validateInput)?.value ??
-    getRandomTokenId()) as number; // type not narrowing, despite checks
-  const url = `${COLLECTION_URL}/${tokenId}`;
+  const tokenId =
+    interaction.options.getInteger(INPUT_NAME) ?? getRandomTokenId();
+  const url = getAssetUrl(tokenId);
 
   await interaction.deferReply();
 
   try {
-    const { token_metadata = "" } = await safeFetch(url);
-    const { image_data } = JSON.parse(
-      base64ToBuffer(token_metadata).toString()
-    );
-    if (!image_data) {
+    const stream = await fetchAssetImageBuffer(url);
+    if (!stream) {
       throw new Error("boom. no image.");
     }
-    const imageStream = await convert(base64ToBuffer(image_data), {
-      puppeteer: { args: ["--no-sandbox"] },
-      width: 250,
-      height: 250,
+    const imageStream: Buffer = await svgToPng.convert(stream, PNG_CONFIG);
+    const attachment = new AttachmentBuilder(imageStream, {
+      name: getFileName(tokenId),
     });
 
-    interaction.editReply({
-      files: [
-        new AttachmentBuilder(imageStream, { name: getFileName(tokenId) }),
-      ],
-    });
+    interaction.editReply({ files: [attachment] });
   } catch (e) {
     console.log(e);
     interaction.editReply({
@@ -57,22 +54,22 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
   }
 };
 
-const getByIdCommand = {
-  name: "1337m3",
-  description: "M4Y83 1 W111 5UMM0N 4 5Ku11... M4Y83...",
-  options: [
-    {
-      type: ApplicationCommandOptionType.Integer,
-      name: "70k3n_1d",
-      description: "token id of a 1337skull",
-      min_value: 0,
-      max_value: 7330,
-    },
-  ],
-};
+const getByIdCommand = new SlashCommandBuilder()
+  .setName(COMMAND_NAME)
+  .setDescription("M4Y83 1 W111 5UMM0N 4 5Ku11... M4Y83...")
+  .addIntegerOption((option) =>
+    option
+      .setName(INPUT_NAME)
+      .setDescription("token id of a 1337skull")
+      .setMinValue(0)
+      .setMaxValue(COLLECTION_TOKEN_COUNT - 1)
+  )
+  .toJSON();
 
-export default {
+const command: CustomCommand = {
   handler: getById,
   command: getByIdCommand,
   name: COMMAND_NAME,
 };
+
+export default command;

@@ -9,7 +9,6 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@types/isomorphic-fetch": "^0.0.36",
     "convert-svg-to-png": "^0.6.4",
     "discord-interactions": "^3.2.0",
     "discord.js": "^14.7.1",
@@ -19,6 +18,7 @@
     "isomorphic-fetch": "^3.0.0"
   },
   "devDependencies": {
+    "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "^18.11.13",
     "esbuild": "^0.16.4",
     "esbuild-node-tsc": "^2.0.4",

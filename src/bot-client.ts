@@ -2,11 +2,11 @@ import "dotenv/config";
 import { Client, GatewayIntentBits } from "discord.js";
 import { commands } from "./commands/index";
 
-export const initClient = () => {
+export const initClient = async () => {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
   client.on("ready", () => {
-    console.log(`Logged in as ${client.user?.tag || "frickin nobody"}!`);
+    console.log(`Logged in as ${client.user?.tag ?? "frickin nobody"}!`);
   });
 
   client.on("interactionCreate", async (interaction) => {
@@ -20,5 +20,5 @@ export const initClient = () => {
     }
   });
 
-  client.login(process.env.DISCORD_BOT);
+  await client.login(process.env.DISCORD_BOT);
 };
