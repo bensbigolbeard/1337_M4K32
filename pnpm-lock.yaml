@@ -4,28 +4,26 @@ specifiers:
   '@types/isomorphic-fetch': ^0.0.36
   '@types/node': ^18.11.13
   convert-svg-to-png: ^0.6.4
-  discord-interactions: ^3.2.0
   discord.js: ^14.7.1
   dotenv: ^16.0.3
   esbuild: ^0.16.4
   esbuild-node-tsc: ^2.0.4
   fastify: ^4.10.2
-  hex-rgb: ^5.0.0
+  froebel: ^0.23.0
   isomorphic-fetch: ^3.0.0
   nodemon: ^2.0.20
   typescript: ^4.9.3
 
 dependencies:
-  '@types/isomorphic-fetch': 0.0.36
   convert-svg-to-png: 0.6.4
-  discord-interactions: 3.2.0
   discord.js: 14.7.1
   dotenv: 16.0.3
   fastify: 4.10.2
-  hex-rgb: 5.0.0
+  froebel: 0.23.0
   isomorphic-fetch: 3.0.0
 
 devDependencies:
+  '@types/isomorphic-fetch': 0.0.36
   '@types/node': 18.11.13
   esbuild: 0.16.4
   esbuild-node-tsc: 2.0.4_mcrc3zxaufalvcqeixmobjmmzy
@@ -314,7 +312,7 @@ packages:
 
   /@types/isomorphic-fetch/0.0.36:
     resolution: {integrity: sha512-ulw4d+vW1HKn4oErSmNN2HYEcHGq0N1C5exlrMM0CRqX1UUpFhGb5lwiom5j9KN3LBJJDLRmYIZz1ghm7FIzZw==}
-    dev: false
+    dev: true
 
   /@types/node/18.11.13:
     resolution: {integrity: sha512-IASpMGVcWpUsx5xBOrxMj7Bl8lqfuTY7FKAnPmu5cHkfQVWF8GulWS1jbRqA934qZL35xh5xN/+Xe/i26Bod4w==}
@@ -658,13 +656,6 @@ packages:
     resolution: {integrity: sha512-GB4ThibZEzWXcvgL2QfjKoDX5j1sNLWtgibodiJ9M9PM0u9bdR2t3vZ24oQWLKlksJehSJmZDtRsAibhcr46vw==}
     dev: false
 
-  /discord-interactions/3.2.0:
-    resolution: {integrity: sha512-/J25RpYlokRW+2HmU5C2xo9bcgCWIzCl+MRRLCL/XvD+Hqe2WyQc639vUUKUNi6hdSdWb2kGNZDkMZxDky2dZg==}
-    engines: {node: '>=12'}
-    dependencies:
-      tweetnacl: 1.0.3
-    dev: false
-
   /discord.js/14.7.1:
     resolution: {integrity: sha512-1FECvqJJjjeYcjSm0IGMnPxLqja/pmG1B0W2l3lUY2Gi4KXiyTeQmU1IxWcbXHn2k+ytP587mMWqva2IA87EbA==}
     engines: {node: '>=16.9.0'}
@@ -915,6 +906,10 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
+  /froebel/0.23.0:
+    resolution: {integrity: sha512-QkSodpZfhwX+07q6ALbh2TweQ+1s8mMsW/cLvcWlF8yFX3xO7GzMM02Jns6mkf3GU1RAQalJ0VSj0dc2k2999Q==}
+    dev: false
+
   /fs-constants/1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
     dev: false
@@ -985,11 +980,6 @@ packages:
   /has-flag/4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
-    dev: false
-
-  /hex-rgb/5.0.0:
-    resolution: {integrity: sha512-NQO+lgVUCtHxZ792FodgW0zflK+ozS9X9dwGp9XvvmPlH7pyxd588cn24TD3rmPm/N0AIRXF10Otah8yKqGw4w==}
-    engines: {node: '>=12'}
     dev: false
 
   /htmlparser2/8.0.1:
@@ -1608,10 +1598,6 @@ packages:
 
   /tslib/2.4.1:
     resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
-    dev: false
-
-  /tweetnacl/1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
     dev: false
 
   /typescript/4.9.4:

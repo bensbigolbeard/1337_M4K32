@@ -1,19 +1,46 @@
+import { pipe } from "froebel";
+import fetch from "isomorphic-fetch";
+import {
+  ChatInputCommandInteraction,
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
 import { COLLECTION_TOKEN_COUNT } from "./constants";
-import isoFetch from "isomorphic-fetch";
 
-export const safeFetch = async (url: string) => {
+/* Internal Custom Command API */
+
+export type CustomCommand = {
+  name: string;
+  handler: (interaction: ChatInputCommandInteraction) => void;
+  command: RESTPostAPIChatInputApplicationCommandsJSONBody;
+};
+
+/* Asset Fetching Utils */
+
+type AssetResponse = Record<"image_url", string>;
+export const fetchImageUrl = pipe(
+  fetch,
+  (res: Response) => res.json(),
+  ({ image_url }: AssetResponse) => image_url
+);
+
+const fetchAssetImage = pipe(
+  fetch,
+  (res: Response) => res.arrayBuffer(),
+  (ab: ArrayBuffer) => Buffer.from(ab)
+);
+
+export const fetchAssetImageBuffer = async (
+  url: string
+): Promise<Buffer | null> => {
   try {
-    const headers = new global.Headers({ Accept: "application/json" });
-    const res = await isoFetch(url, { headers });
-    return res.json();
+    return pipe(fetchImageUrl, fetchAssetImage)(url);
   } catch (e) {
-    console.log("fetchError:", e);
-    return {};
+    console.error("fetchError:", e);
+    return null;
   }
 };
 
-export const base64ToBuffer = (value = "") =>
-  value ? Buffer.from(value.split("base64,")[1], "base64") : Buffer.from("{}");
+/* General Utils */
 
 export const getRandomTokenId = () =>
   Math.floor(Math.random() * COLLECTION_TOKEN_COUNT) || 1;

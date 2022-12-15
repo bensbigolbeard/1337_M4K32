@@ -1,29 +1,26 @@
-import fastify, {
-  FastifyRequest,
-  FastifyReply,
-  FastifyInstance,
-} from "fastify";
+import { pipe } from "froebel";
+import { fastify } from "fastify";
 import { initClient } from "./bot-client";
 import { initCommands } from "./register-commands";
 
-const startServer = async (): Promise<FastifyInstance> => {
+const startServer = async (huh) => {
   const app = fastify();
 
-  app.get(
-    "/",
-    async (
-      request: FastifyRequest,
-      reply: FastifyReply
-    ): Promise<FastifyReply> => {
-      return reply.code(200);
-    }
-  );
+  app.get("/", async (request, reply) => {
+    return reply.code(200);
+  });
 
   return app;
 };
 
-startServer()
-  .then((app) => app.listen({ port: 3333 }))
-  .then(() => initClient())
-  .then(() => initCommands())
-  .catch(console.error);
+try {
+  pipe(
+    /* @ts-ignore: no clue why it thinks this arg is type `never`. still works */
+    startServer,
+    (app) => app.listen({ port: 3333 }),
+    initClient,
+    initCommands
+  )();
+} catch (e) {
+  console.error("startupError:", e);
+}
