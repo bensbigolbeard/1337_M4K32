@@ -1,4 +1,5 @@
-import isoFetch from "isomorphic-fetch";
+import { pipe } from "froebel";
+import fetch from "isomorphic-fetch";
 import {
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
@@ -16,26 +17,25 @@ export type CustomCommand = {
 /* Asset Fetching Utils */
 
 type AssetResponse = Record<"image_url", string>;
-export const fetchImageUrl = async (url: string) => {
-  const res = await isoFetch(url);
-  const asset = await res.json();
-  return (asset as unknown as AssetResponse).image_url;
-};
+export const fetchImageUrl = pipe(
+  fetch,
+  (res: Response) => res.json(),
+  ({ image_url }: AssetResponse) => image_url
+);
 
-const fetchAssetImage = async (url: string) => {
-  const res = await isoFetch(url);
-  return Buffer.from(await res.arrayBuffer());
-};
+const fetchAssetImage = pipe(
+  fetch,
+  (res: Response) => res.arrayBuffer(),
+  (ab: ArrayBuffer) => Buffer.from(ab)
+);
 
 export const fetchAssetImageBuffer = async (
   url: string
 ): Promise<Buffer | null> => {
   try {
-    const imageUrl = await fetchImageUrl(url);
-    const imageSteam = await fetchAssetImage(imageUrl);
-    return imageSteam;
+    return pipe(fetchImageUrl, fetchAssetImage)(url);
   } catch (e) {
-    console.log("fetchError:", e);
+    console.error("fetchError:", e);
     return null;
   }
 };

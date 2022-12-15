@@ -1,8 +1,9 @@
+import { pipe } from "froebel";
 import { fastify } from "fastify";
 import { initClient } from "./bot-client";
 import { initCommands } from "./register-commands";
 
-const startServer = async () => {
+const startServer = async (huh) => {
   const app = fastify();
 
   app.get("/", async (request, reply) => {
@@ -12,8 +13,14 @@ const startServer = async () => {
   return app;
 };
 
-startServer()
-  .then((app) => app.listen({ port: 3333 }))
-  .then(() => initClient())
-  .then(() => initCommands())
-  .catch(console.error);
+try {
+  pipe(
+    /* @ts-ignore: no clue why it thinks this arg is type `never`. still works */
+    startServer,
+    (app) => app.listen({ port: 3333 }),
+    initClient,
+    initCommands
+  )();
+} catch (e) {
+  console.error("startupError:", e);
+}

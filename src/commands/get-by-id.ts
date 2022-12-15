@@ -1,3 +1,4 @@
+import { pipe } from "froebel";
 import svgToPng from "convert-svg-to-png";
 import {
   AttachmentBuilder,
@@ -11,6 +12,8 @@ import {
 } from "../utils";
 import { COLLECTION_TOKEN_COUNT, COLLECTION_URL } from "../constants";
 
+/* Local Constants */
+
 const COMMAND_NAME = "1337_m3";
 const INPUT_NAME = "70k3n_1d";
 const ERROR_MSG_COLOR = 0x880808; // red
@@ -20,8 +23,16 @@ const PNG_CONFIG = {
   height: 125,
 };
 
+/* Local Utils */
+
 const getFileName = (tokenId: number) => `5ku11_${tokenId}.png`;
 const getAssetUrl = (tokenId: number) => `${COLLECTION_URL}/${tokenId}`;
+const filterInvalidImage = (input: Buffer | null) => {
+  if (!input) throw new Error("boom. no image.");
+  return input;
+};
+
+/* Command API Implementations */
 
 const getById = async (interaction: ChatInputCommandInteraction) => {
   const tokenId =
@@ -31,18 +42,19 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply();
 
   try {
-    const stream = await fetchAssetImageBuffer(url);
-    if (!stream) {
-      throw new Error("boom. no image.");
-    }
-    const imageStream: Buffer = await svgToPng.convert(stream, PNG_CONFIG);
-    const attachment = new AttachmentBuilder(imageStream, {
-      name: getFileName(tokenId),
-    });
+    const attachment = await pipe(
+      fetchAssetImageBuffer,
+      filterInvalidImage,
+      (svgBuffer): Buffer => svgToPng.convert(svgBuffer, PNG_CONFIG),
+      (pngBuffer) =>
+        new AttachmentBuilder(pngBuffer, {
+          name: getFileName(tokenId),
+        })
+    )(url);
 
     interaction.editReply({ files: [attachment] });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     interaction.editReply({
       embeds: [
         {
