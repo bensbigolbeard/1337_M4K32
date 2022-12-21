@@ -4,6 +4,8 @@ import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
+  SlashCommandIntegerOption,
+  SlashCommandStringOption,
 } from "discord.js";
 import {
   CustomCommand,
@@ -15,7 +17,10 @@ import { COLLECTION_TOKEN_COUNT, COLLECTION_URL } from "../constants";
 /* Local Constants */
 
 const COMMAND_NAME = "1337_m3";
-const INPUT_NAME = "70k3n_1d";
+const COMMAND_DESCRIPTION = "M4Y83 1 W111 5UMM0N 4 5Ku11... M4Y83...";
+const ID_INPUT_NAME = "70k3n_1d";
+const MESSAGE_INPUT_NAME = "m355493";
+
 const ERROR_MSG_COLOR = 0x880808; // red
 const PNG_CONFIG = {
   puppeteer: { args: ["--no-sandbox"] },
@@ -36,7 +41,9 @@ const filterInvalidImage = (input: Buffer | null) => {
 
 const getById = async (interaction: ChatInputCommandInteraction) => {
   const tokenId =
-    interaction.options.getInteger(INPUT_NAME) ?? getRandomTokenId();
+    interaction.options.getInteger(ID_INPUT_NAME) ?? getRandomTokenId();
+  const content =
+    interaction.options.getString(MESSAGE_INPUT_NAME) ?? undefined;
   const url = getAssetUrl(tokenId);
 
   await interaction.deferReply();
@@ -52,7 +59,10 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
         })
     )(url);
 
-    interaction.editReply({ files: [attachment] });
+    interaction.editReply({
+      ...(content && { content }),
+      files: [attachment],
+    });
   } catch (e) {
     console.error(e);
     interaction.editReply({
@@ -66,16 +76,27 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
   }
 };
 
+/* Command Options */
+
+const idIntegerOption = (option: SlashCommandIntegerOption) =>
+  option
+    .setName(ID_INPUT_NAME)
+    .setDescription("token id of a 1337skull")
+    .setMinValue(0)
+    .setMaxValue(COLLECTION_TOKEN_COUNT - 1);
+
+const messageStringOption = (option: SlashCommandStringOption) =>
+  option
+    .setName(MESSAGE_INPUT_NAME)
+    .setDescription("message to accompany image");
+
+/* Assembled Command */
+
 const getByIdCommand = new SlashCommandBuilder()
   .setName(COMMAND_NAME)
-  .setDescription("M4Y83 1 W111 5UMM0N 4 5Ku11... M4Y83...")
-  .addIntegerOption((option) =>
-    option
-      .setName(INPUT_NAME)
-      .setDescription("token id of a 1337skull")
-      .setMinValue(0)
-      .setMaxValue(COLLECTION_TOKEN_COUNT - 1)
-  )
+  .setDescription(COMMAND_DESCRIPTION)
+  .addIntegerOption(idIntegerOption)
+  .addStringOption(messageStringOption)
   .toJSON();
 
 const command: CustomCommand = {
