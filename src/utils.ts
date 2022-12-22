@@ -6,39 +6,64 @@ import {
 } from "discord.js";
 import { COLLECTION_TOKEN_COUNT } from "./constants";
 
-/* Internal Custom Command API */
+/* Custom Command Interface */
 
-export type CustomCommand = {
+export interface CustomCommand {
   name: string;
   handler: (interaction: ChatInputCommandInteraction) => void;
   command: RESTPostAPIChatInputApplicationCommandsJSONBody;
+}
+
+type AssetTrait = {
+  trait_type: string;
+  value: string;
+};
+type AssetResponse = {
+  image_url: string;
+  name: string;
+  permalink: string;
+  traits: {
+    trait_type: string;
+    value: string;
+  }[];
+};
+export type ParsedAssetResponse = {
+  image_url: string;
+  name: string;
+  permalink: string;
+  traits: {
+    name: string;
+    value: string;
+  }[];
 };
 
 /* Asset Fetching Utils */
 
-type AssetResponse = Record<"image_url", string>;
-export const fetchImageUrl = pipe(
+export const parseTokenInfo = (res: AssetResponse): ParsedAssetResponse => {
+  const { image_url, name, permalink, traits } = res;
+  return {
+    image_url,
+    name,
+    permalink,
+    traits: traits.map(({ trait_type, value }) => ({
+      name: trait_type,
+      value,
+    })),
+  };
+};
+
+export const fetchTokenMeta = pipe(
   fetch,
   (res: Response) => res.json(),
-  ({ image_url }: AssetResponse) => image_url
+  parseTokenInfo
 );
 
-const fetchAssetImage = pipe(
+export const fetchTokenImage = pipe(
+  ({ image_url }: ParsedAssetResponse) => image_url,
   fetch,
   (res: Response) => res.arrayBuffer(),
   (ab: ArrayBuffer) => Buffer.from(ab)
 );
-
-export const fetchAssetImageBuffer = async (
-  url: string
-): Promise<Buffer | null> => {
-  try {
-    return pipe(fetchImageUrl, fetchAssetImage)(url);
-  } catch (e) {
-    console.error("fetchError:", e);
-    return null;
-  }
-};
 
 /* General Utils */
 
