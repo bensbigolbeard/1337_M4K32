@@ -1,6 +1,7 @@
-import getById from "./get-by-id";
-export const COMMAND_REGISTRY = [getById.command];
+import getSkull from "./get-skull";
+
+export const COMMAND_REGISTRY = [getSkull.command];
 
 export const commands = {
-  getById,
+  getSkull,
 };

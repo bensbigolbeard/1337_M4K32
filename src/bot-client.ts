@@ -15,7 +15,15 @@ export const initClient = async () => {
     for (const command in commands) {
       const cmnd = commands[command as keyof typeof commands]; // ugh, TS hates some iterators, apparently
       if (interaction.commandName === cmnd.name) {
-        await cmnd.handler(interaction);
+        if ("subCommands" in cmnd) {
+          const subCommand = interaction.options.getSubcommand();
+
+          return Object.keys(cmnd.subCommands).includes(subCommand)
+            ? await cmnd.subCommands[subCommand](interaction)
+            : undefined;
+        } else {
+          await cmnd.handler(interaction);
+        }
       }
     }
   });

@@ -3,7 +3,7 @@ import { fastify } from "fastify";
 import { initClient } from "./bot-client";
 import { initCommands } from "./register-commands";
 
-const startServer = async (huh) => {
+const startServer = async () => {
   const app = fastify();
 
   app.get("/", async (request, reply) => {

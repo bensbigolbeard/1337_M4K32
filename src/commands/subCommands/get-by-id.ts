@@ -6,53 +6,58 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBooleanOption,
-  SlashCommandBuilder,
   SlashCommandIntegerOption,
   SlashCommandStringOption,
+  SlashCommandSubcommandBuilder,
 } from "discord.js";
 import {
-  CustomCommand,
   getRandomTokenId,
   fetchTokenImage,
   fetchTokenMeta,
   ParsedAssetResponse,
-} from "../utils";
-import { COLLECTION_TOKEN_COUNT, COLLECTION_URL } from "../constants";
+  CustomSubCommand,
+} from "../../utils";
+import {
+  COLLECTION_TOKEN_COUNT,
+  COLLECTION_API_URL,
+  ERROR_MESSAGE,
+  PNG_CONFIG,
+} from "../../constants";
 
 /* Local Constants */
 
-const COMMAND_NAME = "1337_m3";
-const COMMAND_DESCRIPTION = "M4Y83 1 W111 5UMM0N 4 5Ku11... M4Y83...";
+const SUB_COMMAND_NAME = "unleash_skull";
+const SUB_COMMAND_DESCRIPTION = "summons a skull from the official collection";
+
 const ID_INPUT_NAME = "token_id";
+const ID_INPUT_DESCRIPTION = "token id of a 1337skull";
 const MESSAGE_INPUT_NAME = "message";
+const MESSAGE_INPUT_DESCRIPTION = "message";
 const SHOW_TRAITS_INPUT_NAME = "show_traits";
+const SHOW_TRAITS_INPUT_DESCRIPTION = "show_traits";
 
 const ERROR_MSG_COLOR = 0x880808; // red
 const EMBED_COLOR = 0x48dd00; // 1337 green
-const PNG_CONFIG = {
-  puppeteer: { args: ["--no-sandbox"] },
-  width: 150,
-  height: 150,
-};
 
 /* Local Utils */
 
 const getFileName = (tokenId: number) => `5ku11_${tokenId}.png`;
-const getAssetUrl = (tokenId: number) => `${COLLECTION_URL}/${tokenId}`;
+const getAssetUrl = (tokenId: number) => `${COLLECTION_API_URL}/${tokenId}`;
+const formatTraits = (traits: ParsedAssetResponse["traits"]) =>
+  traits.map(({ name, value }) => `${bold(name)}: ${value}`).join(", ");
+
 const filterInvalidImage = (input: Buffer | null) => {
   if (!input) throw new Error("boom. no image.");
   return input;
 };
 
-const parseTraits = (traits: ParsedAssetResponse["traits"]) =>
-  traits.map(({ name, value }) => `${bold(name)}: ${value}`).join(", ");
 const parseImageBuffer = pipe(
   fetchTokenImage,
   filterInvalidImage,
   (svgBuffer: Buffer): Buffer => svgToPng.convert(svgBuffer, PNG_CONFIG)
 );
 
-/* Command API Implementations */
+/* Command Interaction Handler */
 
 const getById = async (interaction: ChatInputCommandInteraction) => {
   /* @ts-ignore: discord types for `member` missing `displayName` */
@@ -72,29 +77,25 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
     const embed = new EmbedBuilder()
       .setTitle(meta.name)
       .setURL(meta.permalink)
-      .setImage(`attachment://5ku11_${tokenId}.png`)
+      .setImage(`attachment://${getFileName(tokenId)}`)
       .setColor(EMBED_COLOR)
       .addFields(
         showTraits
-          ? [{ name: bold("Traits:"), value: parseTraits(meta.traits) }]
+          ? [{ name: bold("Traits:"), value: formatTraits(meta.traits) }]
           : []
       );
 
     interaction.editReply({
       content: message ? `${bold(username)}: ${message}` : undefined,
       embeds: [embed],
-      files: [
-        new AttachmentBuilder(image, {
-          name: getFileName(tokenId),
-        }),
-      ],
+      files: [new AttachmentBuilder(image, { name: getFileName(tokenId) })],
     });
   } catch (e) {
     console.error(e);
     interaction.editReply({
       embeds: [
         {
-          title: "32202: WH47 D1D Y0U D0?!? 72Y 4941N, 8U7 D0 837732.",
+          title: ERROR_MESSAGE,
           color: ERROR_MSG_COLOR,
         },
       ],
@@ -107,34 +108,31 @@ const getById = async (interaction: ChatInputCommandInteraction) => {
 const idIntegerOption = (option: SlashCommandIntegerOption) =>
   option
     .setName(ID_INPUT_NAME)
-    .setDescription("token id of a 1337skull")
+    .setDescription(ID_INPUT_DESCRIPTION)
     .setMinValue(0)
     .setMaxValue(COLLECTION_TOKEN_COUNT - 1);
 
 const messageStringOption = (option: SlashCommandStringOption) =>
-  option
-    .setName(MESSAGE_INPUT_NAME)
-    .setDescription("message to accompany image");
+  option.setName(MESSAGE_INPUT_NAME).setDescription(MESSAGE_INPUT_DESCRIPTION);
 
 const includeInfoBooleanOption = (option: SlashCommandBooleanOption) =>
   option
     .setName(SHOW_TRAITS_INPUT_NAME)
-    .setDescription("adds basic information for specific token");
+    .setDescription(SHOW_TRAITS_INPUT_DESCRIPTION);
 
-/* Assembled Command */
+/** Sub Command */
 
-const getByIdCommand = new SlashCommandBuilder()
-  .setName(COMMAND_NAME)
-  .setDescription(COMMAND_DESCRIPTION)
-  .addIntegerOption(idIntegerOption)
-  .addBooleanOption(includeInfoBooleanOption)
-  .addStringOption(messageStringOption)
-  .toJSON();
+const getByIdSubCommand = (subCommand: SlashCommandSubcommandBuilder) =>
+  subCommand
+    .setName(SUB_COMMAND_NAME)
+    .setDescription(SUB_COMMAND_DESCRIPTION)
+    .addIntegerOption(idIntegerOption)
+    .addBooleanOption(includeInfoBooleanOption)
+    .addStringOption(messageStringOption);
 
-const command: CustomCommand = {
+const subCommand: CustomSubCommand = {
+  subCommand: getByIdSubCommand,
   handler: getById,
-  command: getByIdCommand,
-  name: COMMAND_NAME,
 };
 
-export default command;
+export default subCommand;
