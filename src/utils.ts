@@ -3,21 +3,45 @@ import fetch from "isomorphic-fetch";
 import {
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
+  SlashCommandSubcommandBuilder,
 } from "discord.js";
 import { COLLECTION_TOKEN_COUNT } from "./constants";
 
 /* Custom Command Interface */
-
-export interface CustomCommand {
+export type CustomCommand =
+  | CustomSlashCommand
+  | CustomSlashCommandWithSubCommands;
+interface CustomSlashCommand {
   name: string;
   handler: (interaction: ChatInputCommandInteraction) => void;
   command: RESTPostAPIChatInputApplicationCommandsJSONBody;
 }
+interface CustomSlashCommandWithSubCommands {
+  name: string;
+  subCommands: Record<
+    string,
+    (interaction: ChatInputCommandInteraction) => void
+  >;
+  command: RESTPostAPIChatInputApplicationCommandsJSONBody;
+}
 
-type AssetTrait = {
-  trait_type: string;
-  value: string;
-};
+export interface CustomSubCommand {
+  handler: (interaction: ChatInputCommandInteraction) => void;
+  subCommand: (
+    command: SlashCommandSubcommandBuilder
+  ) => SlashCommandSubcommandBuilder;
+}
+
+export interface ContractAction {
+  address: string;
+  // todo: find the type for web3.js Contract
+  handler: ({
+    contract,
+  }: {
+    contract: any;
+  }) => Promise<Record<string, unknown>>;
+}
+
 type AssetResponse = {
   image_url: string;
   name: string;
@@ -65,7 +89,21 @@ export const fetchTokenImage = pipe(
   (ab: ArrayBuffer) => Buffer.from(ab)
 );
 
+export const decodeDataUri = pipe(
+  (str: string) => str.split("base64,"),
+  (arr: string[]) => arr.slice(-1)[0],
+  (dataUri: string) => Buffer.from(dataUri, "base64"),
+  (buffer: Buffer) => buffer.toString()
+);
+
 /* General Utils */
 
 export const getRandomTokenId = () =>
   Math.floor(Math.random() * COLLECTION_TOKEN_COUNT) || 1;
+
+export function tap<T>(msg: string) {
+  return (v: T): T => {
+    console.log(`*** ${msg}`, v);
+    return v;
+  };
+}
