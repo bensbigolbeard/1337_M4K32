@@ -107,23 +107,28 @@ export const decodeDataUri = pipe(
 export const getRandomTokenId = () =>
   Math.floor(Math.random() * COLLECTION_TOKEN_COUNT) || 1;
 
+/**
+ * Skulls metadata contains a comma-separated list of data uris in the svg's `href` attribute.
+ * This takes in an index of a particular trait and removes it from that comma-separated list,
+ * then reassembles the svg image buffer
+ */
 export const removeTraitInSvg = (traitIndex: TRAIT_INDICES, buffer: Buffer) => {
-  const originalImage = buffer.toString("utf-8");
-  const nestedImage = originalImage.match(ALL_TRAIT_IMAGES_REGEX)?.[1];
+  const parentSvg = buffer.toString("utf-8");
+  const nestedImage = parentSvg.match(ALL_TRAIT_IMAGES_REGEX)?.[1];
 
   if (nestedImage) {
     const parsedNested = decodeDataUri(nestedImage);
     const matches = parsedNested.match(TRAIT_IMAGE_REGEX) || [];
 
     // conditionally removes preceding comma, so the CSS rule value is valid
-    const delimiter = traitIndex === TRAIT_INDICES.SPECIAL ? "" : ",";
+    const delimiter = traitIndex === 0 ? "" : ",";
     const trimmedOriginal = parsedNested.replace(
       `${delimiter}${matches[traitIndex]}`,
       ""
     );
     const newNestedImage = Buffer.from(trimmedOriginal).toString("base64");
 
-    const newImg = originalImage.replace(
+    const newImg = parentSvg.replace(
       nestedImage,
       SVG_DATA_URI_HEADERS.concat(newNestedImage)
     );
