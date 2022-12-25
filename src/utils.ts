@@ -5,7 +5,13 @@ import {
   RESTPostAPIChatInputApplicationCommandsJSONBody,
   SlashCommandSubcommandBuilder,
 } from "discord.js";
-import { COLLECTION_TOKEN_COUNT } from "./constants";
+import {
+  ALL_TRAIT_IMAGES_REGEX,
+  COLLECTION_TOKEN_COUNT,
+  SVG_DATA_URI_HEADERS,
+  TRAIT_IMAGE_REGEX,
+  TRAIT_INDICES,
+} from "./constants";
 
 /* Custom Command Interface */
 export type CustomCommand =
@@ -100,6 +106,32 @@ export const decodeDataUri = pipe(
 
 export const getRandomTokenId = () =>
   Math.floor(Math.random() * COLLECTION_TOKEN_COUNT) || 1;
+
+export const removeTraitInSvg = (traitIndex: TRAIT_INDICES, buffer: Buffer) => {
+  const originalImage = buffer.toString("utf-8");
+  const nestedImage = originalImage.match(ALL_TRAIT_IMAGES_REGEX)?.[1];
+
+  if (nestedImage) {
+    const parsedNested = decodeDataUri(nestedImage);
+    const matches = parsedNested.match(TRAIT_IMAGE_REGEX) || [];
+
+    // conditionally removes preceding comma, so the CSS rule value is valid
+    const delimiter = traitIndex === TRAIT_INDICES.SPECIAL ? "" : ",";
+    const trimmedOriginal = parsedNested.replace(
+      `${delimiter}${matches[traitIndex]}`,
+      ""
+    );
+    const newNestedImage = Buffer.from(trimmedOriginal).toString("base64");
+
+    const newImg = originalImage.replace(
+      nestedImage,
+      SVG_DATA_URI_HEADERS.concat(newNestedImage)
+    );
+    return Buffer.from(newImg);
+  }
+  console.error("Error: nested image not found. trait was not replaced");
+  return buffer;
+};
 
 export function tap<T>(msg: string) {
   return (v: T): T => {
