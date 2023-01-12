@@ -1,23 +1,36 @@
 import { ContractAction } from "../../utils";
 import { pipe } from "froebel";
 import { decodeDataUri } from "../../utils";
-import { COLLECTION_CONTRACT } from "../../constants";
+import { COLLECTION_CONTRACT, TRAIT_INDICES } from "../../constants";
 import { getRandomSeed } from "../utils.js";
 
 /* Local Constants */
 
 /**
- *   This is definitely weird, but the seed is an 18-bit number,
- *   made up of 6, 3-bit sections controlling separate traits.
+ *   These are the number of entries in the TRAITS arrays in the 1337skull contract.
+ *   Selecting anything within these ranges will return a valid trait.
  *
- *   These numbers below were the max values I could enter for
- *   each trait, without triggering an error. I did this manually
- *   by reverse engineering it, so there could be incorrect assumptions here.
+ *   Ref: https://etherscan.io/address/0x9251dec8df720c2adf3b6f46d968107cbbadf4d4#code > Indelible.sol#86
+ *
  */
 const SVG_MAX_BITS = [52, 186, 119, 80, 68, 137];
 
 // Percent chance represented as decimal between 0-1
-const SPECIAL_TRAIT_CHANCE = 0.2;
+const SPECIAL_TRAIT_CHANCE = 0.25;
+const UNDER_TRAIT_CHANCE = 0.35;
+
+// Hex values that will render an empty trait
+const EMPTY_SPECIAL_VALUE = "052";
+const EMPTY_UNDER_VALUE = "080";
+
+/* Local Utils */
+function chunk<T>(arr: T[], chunkSize: number) {
+  let chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 
 /* Contract Action */
 
@@ -25,18 +38,36 @@ const action: ContractAction = {
   address: COLLECTION_CONTRACT,
   // todo: fix any later
   handler: async ({ contract }: { contract: any }) => {
-    let weightedTraits =
-      Math.random() > 1 - SPECIAL_TRAIT_CHANCE
-        ? SVG_MAX_BITS
-        : [0, ...SVG_MAX_BITS.slice(1)];
+    const seed = getRandomSeed(SVG_MAX_BITS);
+    const randomSeedTraits = pipe(
+      (s: string) => s.split(""),
+      (arr: string[]) => chunk<string>(arr, 3),
+      (cs: string[][]) => cs.map((c: string[]) => c.join(""))
+    )(seed);
 
-    const seed = getRandomSeed(weightedTraits);
+    // handle trait weighting
+    const weightedSpecial =
+      Math.random() > 1 - SPECIAL_TRAIT_CHANCE
+        ? randomSeedTraits[TRAIT_INDICES.SPECIAL]
+        : EMPTY_SPECIAL_VALUE;
+    const weightedUnder =
+      Math.random() > 1 - UNDER_TRAIT_CHANCE
+        ? randomSeedTraits[TRAIT_INDICES.UNDER]
+        : EMPTY_UNDER_VALUE;
+
+    // set weighted traits
+    randomSeedTraits[TRAIT_INDICES.SPECIAL] = weightedSpecial;
+    randomSeedTraits[TRAIT_INDICES.UNDER] = weightedUnder;
+
+    // merge back into single seed value
+    const weightedSeed = randomSeedTraits.join("");
+
     const svg = await pipe(
-      contract.methods.hashToSVG(seed).call,
+      contract.methods.hashToSVG(weightedSeed).call,
       decodeDataUri
     )();
 
-    return { svg, seed };
+    return { svg, seed: weightedSeed };
   },
 };
 
