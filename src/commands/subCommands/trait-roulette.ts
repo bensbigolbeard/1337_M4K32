@@ -19,7 +19,7 @@ import {
 const COMMAND_NAME = "hypothetiskull";
 const COMMAND_DESCRIPTION =
   "generates a new, random skull not found in the collection";
-const EMBED_TITLE = "1 D0N7 3x157, D0 1?";
+const EMBED_TITLE = "1 D0N7 3X157, D0 1?";
 const EMBED_URL = `${COLLECTION_CONTRACT_URL}#readContract`;
 const EMBED_IMAGE_NAME = "24nd0m_5ku11.png";
 

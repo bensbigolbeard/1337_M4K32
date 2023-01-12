@@ -15,8 +15,9 @@ const SVG_DATA_URI_HEADERS = "data:image/svg+xml;base64,";
 
 const PNG_CONFIG = {
   puppeteer: { args: ["--no-sandbox"] },
-  width: 150,
-  height: 150,
+  // set values lower than 300 if you want them to show up smaller in the embed
+  width: 1200,
+  height: 1200,
 };
 
 const ERROR_MESSAGE = "32202: WH47 D1D Y0U D0?!? 72Y 4941N, 8U7 D0 837732.";
